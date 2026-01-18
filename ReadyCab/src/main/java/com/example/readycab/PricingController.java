@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@CrossOrigin(origins = "https://readycab-frontend-test.vercel.app")
 public class PricingController {
 
     private final PricingService pricingService;
@@ -15,7 +16,6 @@ public class PricingController {
     }
 
     @PostMapping("/api/pricing")
-    @CrossOrigin("http://localhost:3000")
     public FareResult getPricing(@RequestBody PricingRequest req) {
         return pricingService.getPricing(
             req.getDistance(),
@@ -24,5 +24,4 @@ public class PricingController {
             req.getVehicle_id()
         );
     }
-
 }
