@@ -27,4 +27,5 @@ public class FareResult {
     public float total_trip_price_to_be_paid_by_customer_driver_payment;
 	public float airport_pickup_charges;
 	public float ac_price;
+	public float base_km;
 }

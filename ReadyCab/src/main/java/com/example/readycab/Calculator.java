@@ -5,9 +5,11 @@ public class Calculator {
     float base_fare, perkm, ac_price, surcharge_muti;
     float infra, insurance_fee, city_fee, adminGST, driverGST;
     boolean applySurcharge, applyAc;
+	float base_km;
 
     public Calculator(
             float base_fare,
+            float base_km,
             float perkm,
             float ac_price,
             float surcharge_muti,
@@ -20,6 +22,7 @@ public class Calculator {
             float driverGST) {
 
         this.base_fare = base_fare;
+        this.base_km = base_km;
         this.perkm = perkm;
         this.ac_price = ac_price;
         this.surcharge_muti = surcharge_muti;
@@ -40,6 +43,7 @@ public class Calculator {
 
             zero.base_fare = 0;
             zero.base_fee = 0;
+            zero.base_km = 0;
             zero.charges_per_km = 0;
             zero.surcharge = 0;
             zero.platform_fee = 0;
@@ -67,18 +71,17 @@ public class Calculator {
 
 
     	float base_fee;
+    	float charges_per_km = (distance - base_km) * perkm;
+    	float ac_charges = distance * ac_price; 
+    	
     	
 
     	if (applyAc) {
-    	    base_fee = base_fare + (distance * perkm) + (distance * ac_price);
+    	    base_fee = base_fare + charges_per_km + ac_charges;
     	} else {
-    	    base_fee = base_fare + (distance * perkm);
+    	    base_fee = base_fare + charges_per_km;
     	}
     	
-    	System.out.println(base_fare);
-
-
-        float charges_per_km = distance * perkm;
 
         float surcharge = 0;
         if (applySurcharge) {
@@ -120,6 +123,7 @@ public class Calculator {
         result.base_fare = base_fare;
         result.base_fee = base_fee;
         result.charges_per_km = charges_per_km;
+        result.ac_price = ac_charges;
         result.surcharge = surcharge;
         result.platform_fee = platform;
         result.infrastructure_fee = infra;
@@ -142,6 +146,7 @@ public class Calculator {
         System.out.println("\n===== FINAL BILL =====");
         System.out.println("Base Fee: " + base_fee);
         System.out.println("Charges per Km: " + charges_per_km);
+        System.out.println("Ac Charges: " + ac_charges);
         System.out.println("Surcharge: " + surcharge);
         System.out.println("Platform Fee: " + platform);
         System.out.println("Infrastructure Fee: " + infra);

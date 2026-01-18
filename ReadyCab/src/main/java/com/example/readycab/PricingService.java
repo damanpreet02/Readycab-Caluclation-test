@@ -50,6 +50,7 @@ public class PricingService {
         String vehicleJson = vehicleRes.getBody();
 
         float base_fare = JsonUtil.getFloat(vehicleJson, "base_fare");
+        float base_km = JsonUtil.getFloat(vehicleJson, "base_km");
         float perKm = JsonUtil.getFloat(vehicleJson, "distance_price");
         float acExtra = JsonUtil.getFloat(vehicleJson, "ac_extra_per_km");
         float surchargeMulti = JsonUtil.getFloat(vehicleJson, "surcharge_price");
@@ -76,6 +77,7 @@ public class PricingService {
         // ---------- RUN CALCULATOR ----------
         Calculator calc = new Calculator(
         		base_fare,
+        		base_km,
                 perKm,
                 acExtra,
                 surchargeMulti,
