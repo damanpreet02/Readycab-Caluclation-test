@@ -16,8 +16,7 @@ public class CorsConfig {
                 registry.addMapping("/**")
                         .allowedOrigins("https://readycab-frontend-test.vercel.app")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*")
-                        .allowCredentials(false);
+                        .allowedHeaders("*");
             }
         };
     }
