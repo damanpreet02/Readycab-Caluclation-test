@@ -13,10 +13,15 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                        .allowedOrigins("https://readycab-frontend-test.vercel.app")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*");
+            	registry.addMapping("/**")
+            	   .allowedOrigins(
+            	      "https://readycab-frontend-test.vercel.app",
+            	      "http://localhost:3000",
+            	      "http://localhost:3001"
+            	   )
+            	   .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            	   .allowedHeaders("*");
+
             }
         };
     }
