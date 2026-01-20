@@ -11,7 +11,7 @@ import org.springframework.web.client.RestTemplate;
 public class PricingService {
 
     private static final String VEHICLE_BASE_URL =
-        "https://dev.readycab.api.henceforthsolutions.com/vehicle/";
+        "https://dev.readycab.api.henceforthsolutions.com/vehicle";
 
     private static final String GST_URL =
         "https://dev.readycab.api.henceforthsolutions.com/configuration";
@@ -19,33 +19,40 @@ public class PricingService {
     private static final String POST_URL =
         "https://dev.readycab.api.henceforthsolutions.com/booking/admin/calculate/pricing";
 
-    private static final String TOKEN =
-        "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
-      + "eyJ1c2VyX2lkIjoiNjZlYmJlZGQ5OTQ4YmRmMzBhM2UxZmRj"
-      + "Iiwic2NvcGUiOiJhZG1pbiIsImlhdCI6MTc2ODU4Nzc2Mn0."
-      + "C6QigyIlELW6YMMAfZ9uminzj2cjp8BEeee4pGpua0A";
-
     private final RestTemplate rest = new RestTemplate();
 
-    private HttpHeaders authHeaders() {
+    /** 
+     * Create headers using the token coming from React
+     */
+    private HttpHeaders authHeaders(String authHeader) {
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", TOKEN);
+        headers.set("Authorization", authHeader);  // <--- USE FRONTEND TOKEN
         headers.set("Content-Type", "application/json");
         return headers;
     }
+    
+    
 
-    // ===== THIS NOW MATCHES YOUR CONTROLLER =====
-    public FareResult getPricing(float distance,
-                                   boolean applySurcharge,
-                                   boolean applyAc,
-                                   String vehicleId) {
+    // ===== UPDATED SIGNATURE: now receives token =====
+    public FareResult getPricing(
+            float distance,
+            boolean applySurcharge,
+            boolean applyAc,
+            String vehicleId,
+            String authHeader   // <--- JWT from React
+    ) {
 
         // ---------- API 1 : VEHICLE ----------
-        String vehicleUrl = VEHICLE_BASE_URL + vehicleId;
+    	String vehicleUrl = VEHICLE_BASE_URL + "?id=" + vehicleId;
 
-        ResponseEntity<String> vehicleRes =
-                rest.exchange(vehicleUrl, HttpMethod.GET,
-                        new HttpEntity<>(authHeaders()), String.class);
+    	ResponseEntity<String> vehicleRes =
+    	        rest.exchange(
+    	                vehicleUrl,
+    	                HttpMethod.GET,
+    	                new HttpEntity<>(authHeaders(authHeader)),
+    	                String.class
+    	        );
+
 
         String vehicleJson = vehicleRes.getBody();
 
@@ -58,13 +65,17 @@ public class PricingService {
         float insuranceFee = JsonUtil.getFloat(vehicleJson, "insurance_fees");
         float cityFee = JsonUtil.getFloat(vehicleJson, "city_fees");
         float airportPickup = JsonUtil.getFloat(vehicleJson, "airport_pickup_charges");
-        
-        System.out.println(vehicleJson);
+
+        System.out.println("Vehicle Response: " + vehicleJson);
 
         // ---------- API 2 : GST ----------
         ResponseEntity<String> gstRes =
-                rest.exchange(GST_URL, HttpMethod.GET,
-                        new HttpEntity<>(authHeaders()), String.class);
+                rest.exchange(
+                        GST_URL,
+                        HttpMethod.GET,
+                        new HttpEntity<>(authHeaders(authHeader)),
+                        String.class
+                );
 
         String gstJson = gstRes.getBody();
         String taxBlock = JsonUtil.extractTaxBlock(gstJson);
@@ -76,20 +87,19 @@ public class PricingService {
 
         // ---------- RUN CALCULATOR ----------
         Calculator calc = new Calculator(
-        		base_fare,
-        		base_km,
+                base_fare,
+                base_km,
                 perKm,
                 acExtra,
                 surchargeMulti,
-                applySurcharge,   // ✅ IMPORTANT
-                applyAc,   // ✅ IMPORTANT
+                applySurcharge,
+                applyAc,
                 infraFee,
                 insuranceFee,
                 cityFee,
                 adminGST,
                 driverGST
         );
-
 
         FareResult result = calc.calculate(distance);
 
@@ -101,15 +111,14 @@ public class PricingService {
             result.surcharge = 0;
         }
         if (!applyAc) {
-        	result.ac_price = 0;
+            result.ac_price = 0;
         }
 
         // ---------- POST TO API 3 ----------
         String postBody = "{"
-                + "\"vehicle_id\":\"689b2ef954f6141162c53b74\","
+                + "\"vehicle_id\":\"" + vehicleId + "\","
                 + "\"distance_in_km\":" + distance + ","
-                + "\"apply_surcharge\":false,"
-                
+                + "\"apply_surcharge\":" + applySurcharge + ","
                 + "\"base\":" + result.base_fare + ","
                 + "\"base_fee\":" + result.base_fee + ","
                 + "\"charges_per_km\":" + result.charges_per_km + ","
@@ -124,21 +133,21 @@ public class PricingService {
                 + "\"basic_driver_earning\":" + result.basic_driver_earning + ","
                 + "\"basic_trip_amount\":" + result.basic_trip_amount + ","
                 + "\"app_payment_infrafee\":" + result.app_payment_infrafee + ","
-                + "\"insurance_fee_app_payment\":" + result.insurance_fee_app_payment + ","
+                + "\"insurance_fee_app_payment\":"
+                    + result.insurance_fee_app_payment + ","
                 + "\"total_trip_price_to_be_paid_by_customer\":"
-                + result.total_trip_price_to_be_paid_by_customer + ","
+                    + result.total_trip_price_to_be_paid_by_customer + ","
                 + "\"total_trip_price_to_be_paid_by_customer_app_payment\":"
-                + result.total_trip_price_to_be_paid_by_customer_app_payment + ","
+                    + result.total_trip_price_to_be_paid_by_customer_app_payment + ","
                 + "\"total_trip_price_to_be_paid_by_customer_driver_payment\":"
-                + result.total_trip_price_to_be_paid_by_customer_driver_payment
+                    + result.total_trip_price_to_be_paid_by_customer_driver_payment
                 + "}";
-
 
         System.out.println("\n===== POST BODY TO API 3 =====");
         System.out.println(postBody);
 
         HttpEntity<String> postEntity =
-                new HttpEntity<>(postBody, authHeaders());
+                new HttpEntity<>(postBody, authHeaders(authHeader));
 
         rest.exchange(POST_URL, HttpMethod.POST, postEntity, String.class);
 
