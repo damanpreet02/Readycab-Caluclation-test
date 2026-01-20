@@ -16,7 +16,6 @@ public class CorsConfig {
             	registry.addMapping("/**")
             	   .allowedOrigins(
             	      "https://readycab-frontend-test.vercel.app",
-            	      "https://readycab-frontend-test.vercel.app/",
             	      "http://localhost:3000",
             	      "http://localhost:3001"
             	   )
