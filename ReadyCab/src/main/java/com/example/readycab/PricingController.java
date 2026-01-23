@@ -25,10 +25,10 @@ public class PricingController {
         }
 
         return pricingService.getPricing(
+        		req.getVehicle_id(),
                 req.getDistance(),
                 req.isApplySurcharge(),
                 req.isApplyAc(),
-                req.getVehicle_id(),
                 authHeader
         );
     }
