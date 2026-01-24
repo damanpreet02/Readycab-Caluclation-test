@@ -11,6 +11,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+//import com.fasterxml.jackson.databind.JsonNode;
+//import com.fasterxml.jackson.databind.ObjectMapper;
+
+
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
@@ -55,7 +59,7 @@ public class PricingService {
     ) {
 
         // ---------- API 1 : VEHICLE ----------
-    	String vehicleUrl = VEHICLE_BASE_URL + "?id" + vehicleId;
+    	String vehicleUrl = VEHICLE_BASE_URL + "?id=" + vehicleId;
 //    	System.out.println("===============================");
 //    	System.out.println(vehicleUrl);
 
@@ -69,33 +73,21 @@ public class PricingService {
     	
     	System.out.println("========"+vehicleId);
     	
-    	String vehicleJson = vehicleRes.getBody();
     	
-    	float base_fare = JsonUtil.getFloat(vehicleJson, "base_fare");
-    	float base_km = JsonUtil.getFloat(vehicleJson, "base_km");
-    	float perKm = JsonUtil.getFloat(vehicleJson, "distance_price");
-    	float acExtra = JsonUtil.getFloat(vehicleJson, "ac_extra_per_km");
-    	float surchargeMulti = JsonUtil.getFloat(vehicleJson, "surcharge_price");
-    	float infraFee = JsonUtil.getFloat(vehicleJson, "infrastructure_fees");
-    	float insuranceFee = JsonUtil.getFloat(vehicleJson, "insurance_fees");
-    	float cityFee = JsonUtil.getFloat(vehicleJson, "city_fees");
-    	float airportPickup = JsonUtil.getFloat(vehicleJson, "airport_pickup_charges");
-    	System.out.println("===============================");
-    	ObjectMapper mapper = new ObjectMapper();
+    	
+    	String vehicleJson = vehicleRes.getBody();
 
+    	ObjectMapper mapper = new ObjectMapper();
     	JsonNode root = mapper.readTree(vehicleJson);
 
+    	// array is inside "data"
     	JsonNode dataArray = root.get("data");
 
     	JsonNode matched = null;
-    	
-    	for (JsonNode node : dataArray) {
-    		System.out.println("========"+node);
 
-    	    String id = node
-    	            .get("_id")
-//    	            .get("vehicle_id")
-    	            .asText();
+    	for (JsonNode node : dataArray) {
+
+    	    String id = node.get("_id").asText();   // pricing _id
 
     	    if (vehicleId.equals(id)) {
     	        matched = node;
@@ -106,6 +98,63 @@ public class PricingService {
     	if (matched == null) {
     	    throw new RuntimeException("Vehicle not found for id: " + vehicleId);
     	}
+    	
+    	
+    	
+    	float base_fare = (float) matched.path("base_fare").asDouble(0);
+    	float base_km = (float) matched.path("base_km").asDouble(0);
+    	float perKm = (float) matched.path("distance_price").asDouble(0);
+    	float acExtra = (float) matched.path("ac_extra_per_km").asDouble(0);
+    	float surchargeMulti = (float) matched.path("surcharge_price").asDouble(0);
+    	float infraFee = (float) matched.path("infrastructure_fees").asDouble(0);
+    	float insuranceFee = (float) matched.path("insurance_fees").asDouble(0);
+    	float cityFee = (float) matched.path("city_fees").asDouble(0);
+    	float airportPickup = (float) matched.path("airport_pickup_charges").asDouble(0);
+
+    	
+    	
+    	
+//    	float base_fare = JsonUtil.getFloat(vehicleJson, "base_fare");
+//    	float base_km = JsonUtil.getFloat(vehicleJson, "base_km");
+//    	float perKm = JsonUtil.getFloat(vehicleJson, "distance_price");
+//    	float acExtra = JsonUtil.getFloat(vehicleJson, "ac_extra_per_km");
+//    	float surchargeMulti = JsonUtil.getFloat(vehicleJson, "surcharge_price");
+//    	float infraFee = JsonUtil.getFloat(vehicleJson, "infrastructure_fees");
+//    	float insuranceFee = JsonUtil.getFloat(vehicleJson, "insurance_fees");
+//    	float cityFee = JsonUtil.getFloat(vehicleJson, "city_fees");
+//    	float airportPickup = JsonUtil.getFloat(vehicleJson, "airport_pickup_charges");
+    	
+    	
+    	
+    	
+    	
+    	
+    	
+//    	ObjectMapper mapper = new ObjectMapper();
+//
+//    	JsonNode root = mapper.readTree(vehicleJson);
+//
+//    	JsonNode dataArray = root.get("data");
+//
+//    	JsonNode matched = null;
+//    	
+//    	for (JsonNode node : dataArray) {
+//    		System.out.println("========"+node);
+//
+//    	    String id = node
+//    	            .get("_id")
+////    	            .get("vehicle_id")
+//    	            .asText();
+//
+//    	    if (vehicleId.equals(id)) {
+//    	        matched = node;
+//    	        break;
+//    	    }
+//    	}
+//
+//    	if (matched == null) {
+//    	    throw new RuntimeException("Vehicle not found for id: " + vehicleId);
+//    	}
 
 
 
